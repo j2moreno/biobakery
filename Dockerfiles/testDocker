@@ -1,0 +1,68 @@
+FROM debian:stretch
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+
+RUN set -ex \
+  && apt-get update \
+  && apt-get install -y \
+  build-essential \
+  curl \
+  ed \
+  freeglut3-dev \
+  gfortran \
+  libbz2-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev \
+  libglu1-mesa-dev \
+  libjpeg-dev \
+  liblzma-dev \
+  liblzma-dev \
+  libmariadb-client-lgpl-dev \
+  libpcre3-dev \
+  libpng-dev \
+  libreadline-dev \
+  libssl-dev \
+  libtiff5-dev \
+  libxml2-dev \
+  m4 \
+  mesa-common-dev \
+  openjdk-8-jdk-headless \
+  tcl-dev \
+  tk-dev \
+  zlib1g-dev
+
+
+
+
+#-----------------------------------------------------------------------------------------------------
+# Python
+#-----------------------------------------------------------------------------------------------------
+
+ENV PYTHON_VERSION 3.6.5
+ENV PYTHON_URL https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz
+
+RUN set -ex \
+  && curl -sSL ${PYTHON_URL} | tar -Jxf - \
+  \
+  && gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+  && (cd Python-${PYTHON_VERSION}; \
+      ./configure \
+        --build="$gnuArch" \
+        --enable-loadable-sqlite-extensions \
+        --enable-shared \
+        --with-system-expat \
+        --with-system-ffi) \
+  \
+  && make -C Python-${PYTHON_VERSION} -j $(nproc) \
+  && make -C Python-${PYTHON_VERSION} install \
+  && ldconfig \
+  && pip3 install -U pip \
+  && /bin/rm -rf Python-${PYTHON_VERSION}
+
+
+
+
+
+
