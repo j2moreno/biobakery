@@ -1,0 +1,8 @@
+syntax: glob
+
+databases/
+tests/
+*.pyc
+build/
+dist/
+*.egg-info/
