@@ -63,6 +63,13 @@ RUN set -ex \
 
 
 
+#-----------------------------------------------------------------------------------------------------
+# Install Python Dependencies
+#-----------------------------------------------------------------------------------------------------
 
+pip install numpy
+pip install biopython
+pip install scipy
+pip install kneaddata
 
 
