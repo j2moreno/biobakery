@@ -3,6 +3,29 @@ FROM debian:stretch
 ENV DEBIAN_FRONTEND=noninteractive
 
 
+#-----------------------------------------------------------------------------------------------------
+# Install locales
+#-----------------------------------------------------------------------------------------------------
+
+RUN apt-get update -q \
+  && apt-get install -qy locales \
+  && echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen \
+  && locale-gen
+
+#-----------------------------------------------------------------------------------------------------
+# Set locale environmental variables
+#-----------------------------------------------------------------------------------------------------
+
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
+#-----------------------------------------------------------------------------------------------------
+# Install OS packages
+#-----------------------------------------------------------------------------------------------------
+
+
+
 
 RUN set -ex \
   && apt-get update \
@@ -72,6 +95,30 @@ RUN set -ex \
     biopython \
     scipy \
     kneaddata \
-    matplotlib
+    matplotlibi \
+    snakemake
 
+
+
+#-----------------------------------------------------------------------------------------------------
+# Install bowtie2
+#-----------------------------------------------------------------------------------------------------
+
+RUN set -ex && apt-get install -y zip
+
+ENV BOWTIE2_VERSION 2.3.4.1
+ENV BOWTIE2_URL  "https://downloads.sourceforge.net/project/bowtie-bio/bowtie2/${BOWTIE2_VERSION}/bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip"
+ENV BOWTIE2_URL2 "?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fbowtie-bio%2Ffiles%2Fbowtie2%2F${BOWTIE2_VERSION}%2Fbowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip"
+
+RUN set -ex \
+  && curl -sSL ${BOWTIE2_URL}${BOWTIE2_URL2} > bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip \
+  && unzip bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip \
+  && cp bowtie2-${BOWTIE2_VERSION}-linux-x86_64/bowtie2* /usr/local/bin \
+  && /bin/rm -rf bowtie2-${BOWTIE2_VERSION}-linux-x86_64 bowtie2-${BOWTIE2_VERSION}-linux-x86_64.zip
+
+RUN set -ex && apt-get install -y mercurial
+
+RUN set -ex \
+  && /usr/local/bin/pip install numpy \
+  && /usr/local/bin/pip install biom-format
 
