@@ -67,9 +67,11 @@ RUN set -ex \
 # Install Python Dependencies
 #-----------------------------------------------------------------------------------------------------
 
-pip install numpy
-pip install biopython
-pip install scipy
-pip install kneaddata
+RUN set -ex \
+    && pip3 install numpy \
+    biopython \
+    scipy \
+    kneaddata \
+    matplotlib
 
 
