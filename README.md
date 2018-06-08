@@ -1,6 +1,6 @@
 # Biobakery Data Processing Workflow 
 
-A biobakery workflow pipeline for Whole Metagenome Shotgun (wmgx) data processing implemented using Snakemake rather than AnADAMA2. Programs supported thus far are Kneaddata and Metaphlan. 
+A biobakery workflow pipeline for Whole Metagenome Shotgun (wmgx) data processing implemented using Snakemake rather than AnADAMA2. Programs supported thus far are Kneaddata, Metaphlan, and Humann2. 
 
 
 ![alt text](https://bitbucket.org/repo/5pd5AR/images/2528193080-wms_workflow.jpg)
