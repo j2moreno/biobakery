@@ -13,3 +13,8 @@ https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home
 Warning - this is only to run what is in example-data. If real data is to be used Snakefile needs to be motified 
 
     $ /shares/hii/sw/snakemake/latest/bin/snakemake 
+
+
+Singularity Image can be found at: 
+
+    $ /shares/hii/images/morenoj/biobakery
