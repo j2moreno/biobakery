@@ -1,3 +1,0 @@
-NameError in line 24 of /home/j/jmoreno8/dev/usf-hii/biobakery/Snakefile:
-name 'test' is not defined
-  File "/home/j/jmoreno8/dev/usf-hii/biobakery/Snakefile", line 24, in <module>

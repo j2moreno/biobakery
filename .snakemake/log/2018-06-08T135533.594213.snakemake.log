@@ -1,6 +1,0 @@
-Building DAG of jobs...
-Relative file path './metaphlan_analysis' starts with './'. This is redundant and strongly discouraged. It can also lead to inconsistent results of the file-matching approach used by Snakemake. You can simply omit the './' for relative file paths.
-Relative file path './test-kneaddata-output/demo_kneaddata.fast*' starts with './'. This is redundant and strongly discouraged. It can also lead to inconsistent results of the file-matching approach used by Snakemake. You can simply omit the './' for relative file paths.
-Relative file path './metaphlan_analysis' starts with './'. This is redundant and strongly discouraged. It can also lead to inconsistent results of the file-matching approach used by Snakemake. You can simply omit the './' for relative file paths.
-Nothing to be done.
-Complete log: /home/j/jmoreno8/dev/usf-hii/biobakery/.snakemake/log/2018-06-08T135533.594213.snakemake.log
