@@ -11,4 +11,5 @@ https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home
 
 ##How to Run 
 Warning - this is only to run what is on example-data. If real data is to be used Snakefile needs to be motified 
+
     $ /shares/hii/sw/snakemake/latest/bin/snakemake 
