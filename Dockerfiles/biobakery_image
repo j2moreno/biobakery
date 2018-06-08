@@ -96,7 +96,8 @@ RUN set -ex \
     scipy \
     kneaddata \
     matplotlibi \
-    snakemake
+    snakemake \
+    humann2
 
 
 
