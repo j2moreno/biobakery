@@ -19,7 +19,7 @@ BOWTIE_GRCH38_BUILD = '/shares/hii/data/bt2/GRCh38'
 
 rule all:
     input:
-        'metaphlan_analysis/demo_metaphlan_output.txt'
+        'metaphlan_analysis/demo_metaphlan_output.txt',
 
 rule kneaddata:
     input:
@@ -40,15 +40,23 @@ rule kneaddata:
 
 rule metaphlan:
     input:
-        path = 'test-kneaddata-output',
-        fastqFile = 'test-kneaddata-output/demo_kneaddata.fastq'
+        'test-kneaddata-output'
+
+    params:
+        path = 'demo_kneaddata.fastq'
     output:
         'metaphlan_analysis/demo_metaphlan_output.txt'
     shell:
         """
-        {SINGULARITY} python3 {METAPHLAN_DIR} {input.fastqFile} \
+        {SINGULARITY} python3 {METAPHLAN_DIR} {input}/{params.path} \
             --input_type fastq \
             --bowtie2_exe {BOWTIE2_EXEC} \
             --bowtie2_build {BOWTIE2_BUILD} \
             --output {output}
         """
+
+
+
+
+
+
