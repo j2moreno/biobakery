@@ -10,7 +10,7 @@ https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home
 
 
 ## How to Run 
-Intended to run for example data in the example-data directory. If real data is to be used Snakefile needs to be motified 
+Intended to run for example data in the example-data directory. If real data is to be used, some changes are necessary. 
 
 To run on HPC cluster:
 
