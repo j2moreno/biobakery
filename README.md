@@ -18,7 +18,7 @@ To run on HPC cluster:
    
 To run locally (for testing purposes)
 
-***WARNING computational heavy: 
+#### WARNING computational heavy: 
 
     $ /shares/hii/sw/snakemake/latest/bin/snakemake 
 
