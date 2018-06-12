@@ -17,6 +17,7 @@ To run on HPC cluster:
     $ sh run_biobakery_workflow.sh
    
 To run locally (for testing purposes)
+
 ***WARNING computational heavy: 
 
     $ /shares/hii/sw/snakemake/latest/bin/snakemake 
