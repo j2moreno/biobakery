@@ -16,6 +16,7 @@ METAPHLAN_PY = 'biobakery-metaphlan2-e7761e78f362/metaphlan2.py'
 METAPHLAN_DIR ='biobakery-metaphlan2-e7761e78f362'
 
 DEMO_SAMPLE = ['SRS014459-Stool.fasta.gz', 'SRS014464-Anterior_nares.fasta.gz', 'SRS014476-Supragingival_plaque.fasta.gz', 'SRS014494-Posterior_fornix.fasta.gz']
+DEMO_SIMPLE = ['SRS014459-Stool', 'SRS014464-Anterior_nares', 'SRS014476-Supragingival_plaque', 'SRS014494-Posterior_fornix']
 
 BOWTIE_GRCH38_BUILD = '/shares/hii/data/bt2/GRCh38'
 NUCLEO_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/chocophlan'
@@ -25,7 +26,7 @@ PROTEIN_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/uniref'
 rule all:
     input:
         expand('metaphlan_analysis/{samples}.txt', samples = DEMO_SAMPLE),
-        expand('humann2_analysis/{samples}_genefamilies.tsv', samples = DEMO_SAMPLE)
+        expand('humann2_analysis/{samples}_genefamilies.tsv', samples = DEMO_SIMPLE)
 
 #to be run only if preprocessing necssary (only accepts fastq files)
 rule kneaddata:
@@ -64,11 +65,11 @@ rule metaphlan:
 
 rule humann:
     input:
-        expand('example-data/{samples}', samples =DEMO_SAMPLE)
+        expand('metaphlan_analysis/{samples}.txt', samples = DEMO_SAMPLE)
     params:
         demo_data = DEMO_SAMPLE
     output:
-        expand('humann2_analysis/{samples}_genefamilies.tsv', samples =DEMO_SAMPLE)
+        expand('humann2_analysis/{samples}_genefamilies.tsv', samples =DEMO_SIMPLE)
     shell:
         """
         for sample in {params.demo_data}; do
