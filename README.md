@@ -12,6 +12,12 @@ https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home
 ## How to Run 
 Warning - this is only to run what is in example-data. If real data is to be used Snakefile needs to be motified 
 
+To run on HPC cluster:
+
+    $ sh run_biobakery_workflow.sh
+   
+To run locally (for testing purposes): 
+
     $ /shares/hii/sw/snakemake/latest/bin/snakemake 
 
 
