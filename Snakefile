@@ -24,6 +24,7 @@ PROTEIN_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/uniref'
 
 rule all:
     input:
+        #expand('output/kneaddata_output/{sample}.txt', sample = DEMO_SAMPLES)
         expand('output/metaphlan_analysis/{sample}.txt', sample = DEMO_SAMPLES),
         #expand('humann2_analysis/{sample}_genefamilies.tsv', sample = DEMO_SAMPLES)
 
@@ -32,8 +33,7 @@ rule kneaddata:
     input:
         'example-data/{sample}.fasta.gz'
     output:
-        'test-kneaddata-output'
-
+        'output/kneaddata_output/{sample}.txt'
     shell:
         """
         {SINGULARITY} kneaddata \
@@ -59,26 +59,22 @@ rule metaphlan:
             --output {output}
         """
 
-#rule humann:
-#    input:
-#        expand('metaphlan_analysis/{samples}.txt', samples = DEMO_SAMPLE)
-#    params:
-#        demo_data = DEMO_SAMPLE
-#    output:
-#        expand('humann2_analysis/{samples}_genefamilies.tsv', samples =DEMO_SIMPLE)
-#    shell:
-#        """
-#        for sample in {params.demo_data}; do
-#            {SINGULARITY} humann2 -i example-data/$sample \
-#                --bowtie2 {BOWTIE_DIR} \
-#                --metaphlan {METAPHLAN_DIR} \
-#                --taxonomic-profile metaphlan_analysis/$sample.txt \
-#                --nucleotide-database {NUCLEO_DB} \
-#                --protein-database {PROTEIN_DB} \
-#                -o humann2_analysis
-#        done
-#        """
-#
+rule humann:
+    input:
+        'output/metaphlan_analysis/{sample}.txt'
+    output:
+        'output/humann2_analysis/{sample}_genefamilies.tsv'
+    shell:
+        """
+        {SINGULARITY} humann2 -i {input} \
+            --bowtie2 {BOWTIE_DIR} \
+            --metaphlan {METAPHLAN_DIR} \
+            --taxonomic-profile output/metaphlan_analysis/{sample}.txt \
+            --nucleotide-database {NUCLEO_DB} \
+            --protein-database {PROTEIN_DB} \
+            -o humann2_analysis
+        """
+
 
 
 
