@@ -25,11 +25,11 @@ PROTEIN_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/uniref'
 
 rule all:
     input:
-        expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES),
-        'output/kneaddata_output/logs/kneaddata_read_counts.txt',
-        expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
-        'output/metaphlan_analysis/merged_abundance_profiles.txt',
-        #expand('output/humann2_analysis/{sample}/{sample}genefamilies.tsv', sample = DEMO_SAMPLES)
+        #expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES),
+        #'output/kneaddata_output/logs/kneaddata_read_counts.txt',
+        #expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
+        #'output/metaphlan_analysis/merged_abundance_profiles.txt',
+        expand('output/humann2_analysis/{sample}/{sample}genefamilies.tsv', sample = DEMO_SAMPLES)
 
 #to be run only if preprocessing necssary (only accepts fastq files)
 rule kneaddata:
@@ -118,29 +118,30 @@ rule humann:
 
 rule huamnn_post_processing:
     input:
-        pathAbun = 'output/humann2_analysis/{sample}/{sample}pathadbunance.tsv',
-        alignment = '',
-        feature = ''
-    params:
-        sampleName = '{sample}'
+        expand('output/humann2_analysis/{sample}/{sample}genefamilies.tsv', sample = DEMO_SAMPLES)
     output:
         ''
     shell:
+
+        #TO TEST
         """
         find output/humann2_analysis/ -name "*_pathabundance.tsv" | while read i; do \
-            {SINGULARITY} humann2_renorm_table -i $i \
+            mv $i ouput/humann2_analysis/pathAbun/; done
+
+        for file in output/humann2_analysis/pathAbun/*.tsv; do \
+            {SINGULARITY} humann2_renorm_table -i $file \
                 --units relab \
-                --output /output/humann2_analysis/path_Abundance_Norm/{params.sampleName}pathAbundance_norm.tsv; \
+                --output /output/humann2_analysis/path_Abundance_Norm/$file_pathAbundance_norm.tsv
         done
 
         {SINGUALRITY} humann2_join_tables \
             --input /output/humann2_analysis/path_Abundance_Norm \
-            --output /output/humann2_analysis/path_Abundance_Norm/merged_tables.tsv
+            --output /output/humann2_analysis/path_Abundance_Norm/pathAbun_merged_tables.tsv
 
 
 
 
-        find output/humann2_analysis/ -name "*logs" | while read i; do \
+        find output/humann2_analysis/ -name "*.log" | while read i; do \
             mv $i output/humann2_analysis/logs/; done
 
         {SINGULARITY} python biobakery-scripts/get_counts_from_humann2_logs.py \
@@ -148,18 +149,40 @@ rule huamnn_post_processing:
             --output output/humann2_analysis/logs/log_counts.txt
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
-            mv $i output/humann2_analysis/gene_Families/; done
+            {SINGULARITY} humann2_renorm_table -i $i \
+                --units relab \
+                --output /output/humann2_analysis/geneFamilies_Norm/{params.sampleName}genefamilies_norm.tsv; \
+        done
+
+        {SINGULARITY} python humann2_join_tables \
+            --input output/humann2_analysis/geneFamilies_Norm \
+            --output output/humann2_analysis/geneFamilies_Norm/geneFam_merged_tables.tsv
+
+
+
+
 
         find output/humann2_analysis/ -name "*_pathcoverage.tsv" | while read i; do \
             mv $i output/humann2_analysis/path_Coverage/; done
 
-
-
-
         """
-
-
-
-
-
