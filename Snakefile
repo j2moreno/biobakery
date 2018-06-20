@@ -25,18 +25,21 @@ PROTEIN_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/uniref'
 
 rule all:
     input:
-        expand('output/kneaddata_output/{sample}', sample = DEMO_SAMPLES),
+        expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES),
         'output/kneaddata_output/logs/kneaddata_read_counts.txt',
-        expand('output/metaphlan_analysis/{sample}/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
-        #expand('humann2_analysis/{sample}_genefamilies.tsv', sample = DEMO_SAMPLES)
+        expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
+        'output/metaphlan_analysis/merged_abundance_profiles.txt',
+        #expand('output/humann2_analysis/{sample}/{sample}genefamilies.tsv', sample = DEMO_SAMPLES)
 
 #to be run only if preprocessing necssary (only accepts fastq files)
 rule kneaddata:
     input:
         R1 = 'example-data/{sample}1.fastq',
         R2 = 'example-data/{sample}2.fastq'
+    params:
+        directory = 'output/kneaddata_output/{sample}'
     output:
-        'output/kneaddata_output/{sample}/merged_R1_R2_.fastq'
+        'output/kneaddata_output/{sample}/{sample}R1_R2_.fastq'
     shell:
         """
         {SINGULARITY} kneaddata \
@@ -45,20 +48,20 @@ rule kneaddata:
             --reference-db {BOWTIE_GRCH38_BUILD} \
             --bowtie2 {BOWTIE_DIR} \
             --trimmomatic {TRIMMOMATIC_DIR} \
-            --output {output}
+            --output {params.directory}
 
-        cat {output}/*_paired_*.fastq >> {output}
+        cat {params}/*_paired_*.fastq >> {output}
 
         """
 rule kneaddata_post_processing:
     input:
-        expand('output/kneaddata_output/{sample}/merged_R1_R2_.fastq', sample = DEMO_SAMPLES)
+        expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES)
     output:
         'output/kneaddata_output/logs/kneaddata_read_counts.txt'
     shell:
         """
         find output/kneaddata_output/ -name "*.log" | while read i; do \
-            cp $i output/kneaddata_output/logs/; done
+            mv $i output/kneaddata_output/logs/; done
 
         {SINGULARITY} kneaddata_read_count_table \
             --input {KNEADDATA_LOGS} \
@@ -68,34 +71,94 @@ rule kneaddata_post_processing:
 
 rule metaphlan:
     input:
-        'output/kneaddata_output/{sample}/merged_R1_R2_.fastq'
+        'output/kneaddata_output/{sample}/{sample}R1_R2_.fastq'
     output:
-        'output/metaphlan_analysis/{sample}/{sample}taxo_bugs.txt'
+        'output/metaphlan_analysis/{sample}taxo_bugs.txt'
     shell:
         """
         {SINGULARITY} python {METAPHLAN_PY} {input} \
             --input_type fastq \
             --bowtie2_exe {BOWTIE2_EXEC} \
             --bowtie2_build {BOWTIE2_BUILD} \
-            --bowtie2out output/metaphlan_analysis/{sample}/{sample}.bowtie2out.txt \
             --output {output}
+        """
+
+rule metaphlan_post_processing:
+    input:
+        expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES)
+    output:
+        'output/metaphlan_analysis/merged_abundance_profiles.txt'
+
+    shell:
+        """
+        {SINGULARITY} python {METAPHLAN_DIR}/utils/merge_metaphlan_tables.py {input} \
+            > {output}
         """
 
 rule humann:
     input:
-        'output/metaphlan_analysis/{sample}.txt'
+        fastq = 'output/kneaddata_output/{sample}/{sample}R1_R2_.fastq',
+        profile = 'output/metaphlan_analysis/{sample}taxo_bugs.txt',
+    params:
+        directory = 'output/humann2_analysis/{sample}'
     output:
-        'output/humann2_analysis/{sample}_genefamilies.tsv'
+        'output/humann2_analysis/{sample}/{sample}genefamilies.tsv'
     shell:
         """
-        {SINGULARITY} humann2 -i {input} \
+        {SINGULARITY} humann2 -i {input.fastq} \
             --bowtie2 {BOWTIE_DIR} \
             --metaphlan {METAPHLAN_DIR} \
-            --taxonomic-profile output/metaphlan_analysis/{sample}.txt \
+            --taxonomic-profile {input.profile} \
             --nucleotide-database {NUCLEO_DB} \
             --protein-database {PROTEIN_DB} \
-            -o humann2_analysis
+            --threads 4 \
+            -o {params}
         """
+
+
+rule huamnn_post_processing:
+    input:
+        pathAbun = 'output/humann2_analysis/{sample}/{sample}pathadbunance.tsv',
+        alignment = '',
+        feature = ''
+    params:
+        sampleName = '{sample}'
+    output:
+        ''
+    shell:
+        """
+        find output/humann2_analysis/ -name "*_pathabundance.tsv" | while read i; do \
+            {SINGULARITY} humann2_renorm_table -i $i \
+                --units relab \
+                --output /output/humann2_analysis/path_Abundance_Norm/{params.sampleName}pathAbundance_norm.tsv; \
+        done
+
+        {SINGUALRITY} humann2_join_tables \
+            --input /output/humann2_analysis/path_Abundance_Norm \
+            --output /output/humann2_analysis/path_Abundance_Norm/merged_tables.tsv
+
+
+
+
+        find output/humann2_analysis/ -name "*logs" | while read i; do \
+            mv $i output/humann2_analysis/logs/; done
+
+        {SINGULARITY} python biobakery-scripts/get_counts_from_humann2_logs.py \
+            --input output/humann2_analysis/logs \
+            --output output/humann2_analysis/logs/log_counts.txt
+
+
+        find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
+            mv $i output/humann2_analysis/gene_Families/; done
+
+        find output/humann2_analysis/ -name "*_pathcoverage.tsv" | while read i; do \
+            mv $i output/humann2_analysis/path_Coverage/; done
+
+
+
+
+        """
+
 
 
 
