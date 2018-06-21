@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# This script will create a table of reads from humann2 log files. The table will have 
+# This script will create a table of reads from humann2 log files. The table will have
 # total reads, unaligned after nucleotide search, and unaligned after translated search.
 # The table will also include the total species number.
 
@@ -8,27 +8,27 @@ import sys
 import os
 import argparse
 
-TOTAL_COUNT_TAG="reads; of these:\n"
+TOTAL_COUNT_TAG="reads; of these:"
 NUCLEOTIDE_COUNT_TAG="Unaligned reads after nucleotide alignment:"
 TRANSLATED_COUNT_TAG="Unaligned reads after translated alignment:"
 SPECIES_COUNT_TAG="Total species selected from prescreen:"
 
 def parse_arguments(args):
-    """ 
+    """
     Parse the arguments from the user
     """
     parser = argparse.ArgumentParser(
         description= "Reads the HUMAnN2 logs and prints a table of read counts\n",
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
-        "-i", "--input", 
-        help="the folder of log files\n[REQUIRED]", 
-        metavar="<input_folder>", 
+        "-i", "--input",
+        help="the folder of log files\n[REQUIRED]",
+        metavar="<input_folder>",
         required=True)
     parser.add_argument(
-        "-o", "--output", 
-        help="file to write counts table\n[REQUIRED]", 
-        metavar="<output>", 
+        "-o", "--output",
+        help="file to write counts table\n[REQUIRED]",
+        metavar="<output>",
         required=True)
 
     return parser.parse_args()
@@ -55,7 +55,9 @@ def main():
         sample=os.path.basename(file).split(".log")[0]
         data=[sample,"NA","NA","NA","NA"]
         for line in open(file):
-            if line.endswith(TOTAL_COUNT_TAG):
+            if TOTAL_COUNT_TAG in line:
+                print(line)
+                print (line.split())
                 data[1]=int(line.split()[7])
             elif NUCLEOTIDE_COUNT_TAG in line:
                 try:
