@@ -21,7 +21,7 @@ KNEADDATA_LOGS = 'output/kneaddata_output/logs'
 BOWTIE_GRCH38_BUILD = '/shares/hii/data/bt2/GRCh38'
 NUCLEO_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/chocophlan'
 PROTEIN_DB = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/uniref'
-
+UTILITY_MAPPING = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/utility_mapping/map_level4ec_uniref90.txt.gz'
 
 rule all:
     input:
@@ -127,8 +127,6 @@ rule huamnn_post_processing:
         'output/humann2_analysis/logs/log_counts.txt'
     shell:
         """
-
-        mkdir output/humann2_analysis/path_Abundance_Norm
         find output/humann2_analysis/ -name "*_pathabundance.tsv" | while read i; do \
             echo $i
             echo $(basename $i)
@@ -144,33 +142,64 @@ rule huamnn_post_processing:
 
 
 
+        find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
+            {SINGULARITY} humann2_regroup_table -i $i \
+                -c {UTILITY_MAPPING} \
+                --output output/humann2_analysis/geneFamilies_Grouped/$(basename $i)_ecs.tsv; \
+        done
+
+        find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
+            {SINGULARITY} humann2_renorm_table -i $i \
+                --units relab \
+                --output output/humann2_analysis/geneFamilies_Norm/$(basename $i)_genefamilies_norm.tsv; \
+        done
+
+
+
+        find output/humann2_analysis/ -name "*ecs.tsv" | while read i; do \
+            {SINGULARITY} humann2_renorm_table -i $i \
+                --units relab \
+                --output output/humann2_analysis/geneFamilies_Grouped_Norm/$(basename $i)_ecs_norm.tsv; \
+        done
+
+        {SINGULARITY} humann2_join_tables \
+            --input output/humann2_analysis/geneFamilies_Grouped_Norm \
+            --output output/humann2_analysis/geneFamilies_Grouped_Norm/EC_merged.tsv
+
+
+
+        {SINGULARITY} humann2_join_tables \
+            --input output/humann2_analysis/geneFamilies_Norm \
+            --output output/humann2_analysis/geneFamilies_Norm/geneFam_merged_tables.tsv
+
+
+        {SINGULARITY} python biobakery-scripts/count_features.py \
+            -i output/humann2_analysis/geneFamilies_Norm/geneFam_merged_tables.tsv \
+            --reduce-sample-name --ignore-un-features --ignore-stratification \
+            -o vis_inputs/geneFamilies_counts.tsv
+
+        {SINGULARITY} python biobakery-scripts/count_features.py \
+            -i output/humann2_analysis/geneFamilies_Grouped_Norm/EC_merged.tsv \
+            --reduce-sample-name --ignore-un-features --ignore-stratification \
+            -o vis_inputs/EC_counts.tsv
+
+        {SINGULARITY} python biobakery-scripts/count_features.py \
+            -i output/humann2_analysis/path_Abundance_Norm/pathAbun_merged_tables.tsv \
+            --reduce-sample-name --ignore-un-features --ignore-stratification \
+            -o vis_inputs/path_counts.tsv
+
+        {SINGULARITY} humann2_join_tables -i vis_inputs \
+            --file_name _counts.tsv \
+            -o vis_inputs/humann2_feature_counts.tsv
+
+        find output/humann2_analysis/ -name "*_pathcoverage.tsv" | while read i; do \
+            cp $i output/humann2_analysis/path_Coverage/; done
+
         find output/humann2_analysis/ -name "*.log" | while read i; do \
             cp $i output/humann2_analysis/logs/; done
 
         {SINGULARITY} python biobakery-scripts/get_counts_from_humann2_logs.py \
             --input output/humann2_analysis/logs \
             --output output/humann2_analysis/logs/log_counts.txt
-
-
-
-
-
-
-        find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
-            {SINGULARITY} humann2_renorm_table -i $i \
-                --units relab \
-                --output /output/humann2_analysis/geneFamilies_Norm/{params.sampleName}genefamilies_norm.tsv; \
-        done
-
-        {SINGULARITY} python humann2_join_tables \
-            --input output/humann2_analysis/geneFamilies_Norm \
-            --output output/humann2_analysis/geneFamilies_Norm/geneFam_merged_tables.tsv
-
-
-
-
-
-        find output/humann2_analysis/ -name "*_pathcoverage.tsv" | while read i; do \
-            mv $i output/humann2_analysis/path_Coverage/; done
 
         """
