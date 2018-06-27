@@ -15,7 +15,8 @@ TRIMMOMATIC_DIR = './bin'
 METAPHLAN_PY = 'biobakery-metaphlan2-e7761e78f362/metaphlan2.py'
 METAPHLAN_DIR ='biobakery-metaphlan2-e7761e78f362'
 
-DEMO_SAMPLES = ['131014_SN805_0422_AC2UG1ACXX_5_IDMB9_', '131014_SN805_0422_AC2UG1ACXX_5_IDMB92_']
+DEMO_SAMPLES = ['131014_SN805_0422_AC2UG1ACXX_5_IDMB9_', '131014_SN805_0422_AC2UG1ACXX_5_IDMB92_', '130525_SN7001324_0153_AD253AACXX_2_IDMB81_', \
+        '130525_SN7001324_0153_AD253AACXX_7_IDMB48_', '130525_SN7001324_0153_AD253AACXX_7_IDMB50_', '130525_SN7001324_0153_AD253AACXX_7_IDMB68_']
 KNEADDATA_LOGS = 'output/kneaddata_output/logs'
 
 BOWTIE_GRCH38_BUILD = '/shares/hii/data/bt2/GRCh38'
@@ -25,12 +26,13 @@ UTILITY_MAPPING = '/shares/hii/bioinfo/ref/biobakery-workflows/humann2/utility_m
 
 rule all:
     input:
-        #expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES),
-        #'output/kneaddata_output/logs/kneaddata_read_counts.txt',
-        #expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
-        #'output/metaphlan_analysis/merged_abundance_profiles.txt',
-        #expand('output/humann2_analysis/{sample}/{sample}R1_R2__genefamilies.tsv', sample = DEMO_SAMPLES)
-        'output/humann2_analysis/logs/log_counts.txt'
+        expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES),
+        'vis_inputs/kneaddata/merged/kneaddata_read_counts.tsv',
+        expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
+        'vis_inputs/metaphlan2/merged/metaphlan2_taxonomic_profiles.tsv',
+        #expand('output/metaphlan_analysis/{sample}*.sam', sample = DEMO_SAMPLES),
+        expand('output/humann2_analysis/{sample}/{sample}R1_R2__genefamilies.tsv', sample = DEMO_SAMPLES),
+        'vis_inputs/humann2/counts/humann2_read_and_species_count_table.tsv'
 
 #to be run only if preprocessing necssary (only accepts fastq files)
 rule kneaddata:
@@ -59,7 +61,7 @@ rule kneaddata_post_processing:
     input:
         expand('output/kneaddata_output/{sample}/{sample}R1_R2_.fastq', sample = DEMO_SAMPLES)
     output:
-        'output/kneaddata_output/logs/kneaddata_read_counts.txt'
+        'vis_inputs/kneaddata/merged/kneaddata_read_counts.tsv'
     shell:
         """
         find output/kneaddata_output/ -name "*.log" | while read i; do \
@@ -82,6 +84,7 @@ rule metaphlan:
             --input_type fastq \
             --bowtie2_exe {BOWTIE2_EXEC} \
             --bowtie2_build {BOWTIE2_BUILD} \
+            --samout output/metaphlan_analysis/$(basename {input}).sam \
             --output {output}
         """
 
@@ -89,7 +92,7 @@ rule metaphlan_post_processing:
     input:
         expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES)
     output:
-        'output/metaphlan_analysis/merged_abundance_profiles.txt'
+        'vis_inputs/metaphlan2/merged/metaphlan2_taxonomic_profiles.tsv'
 
     shell:
         """
@@ -124,7 +127,7 @@ rule huamnn_post_processing:
     params:
         'output/humann2_analysis/path_Abundance_Norm'
     output:
-        'output/humann2_analysis/logs/log_counts.txt'
+        'vis_inputs/humann2/counts/humann2_read_and_species_count_table.tsv'
     shell:
         """
         find output/humann2_analysis/ -name "*_pathabundance.tsv" | while read i; do \
@@ -138,8 +141,6 @@ rule huamnn_post_processing:
         {SINGULARITY} humann2_join_tables \
             --input output/humann2_analysis/path_Abundance_Norm \
             --output output/humann2_analysis/path_Abundance_Norm/pathAbun_merged_tables.tsv
-
-
 
 
         find output/humann2_analysis/ -name "*_genefamilies.tsv" | while read i; do \
@@ -176,30 +177,32 @@ rule huamnn_post_processing:
         {SINGULARITY} python biobakery-scripts/count_features.py \
             -i output/humann2_analysis/geneFamilies_Norm/geneFam_merged_tables.tsv \
             --reduce-sample-name --ignore-un-features --ignore-stratification \
-            -o vis_inputs/geneFamilies_counts.tsv
+            -o vis_inputs/humann2/merged/geneFamilies_counts.tsv
 
         {SINGULARITY} python biobakery-scripts/count_features.py \
             -i output/humann2_analysis/geneFamilies_Grouped_Norm/EC_merged.tsv \
             --reduce-sample-name --ignore-un-features --ignore-stratification \
-            -o vis_inputs/EC_counts.tsv
+            -o vis_inputs/humann2/merged/EC_counts.tsv
 
         {SINGULARITY} python biobakery-scripts/count_features.py \
             -i output/humann2_analysis/path_Abundance_Norm/pathAbun_merged_tables.tsv \
             --reduce-sample-name --ignore-un-features --ignore-stratification \
-            -o vis_inputs/path_counts.tsv
+            -o vis_inputs/humann2/merged/pathabundance_relab.tsv
 
-        {SINGULARITY} humann2_join_tables -i vis_inputs \
+        {SINGULARITY} humann2_join_tables -i vis_inputs/humann2/merged \
             --file_name _counts.tsv \
-            -o vis_inputs/humann2_feature_counts.tsv
+            -o vis_inputs/humann2/counts/humann2_feature_counts.tsv
 
         find output/humann2_analysis/ -name "*_pathcoverage.tsv" | while read i; do \
             cp $i output/humann2_analysis/path_Coverage/; done
+
+        touch vis_inputs/anadama.log
 
         find output/humann2_analysis/ -name "*.log" | while read i; do \
             cp $i output/humann2_analysis/logs/; done
 
         {SINGULARITY} python biobakery-scripts/get_counts_from_humann2_logs.py \
             --input output/humann2_analysis/logs \
-            --output output/humann2_analysis/logs/log_counts.txt
+            --output vis_inputs/humann2/counts/humann2_read_and_species_count_table.tsv
 
         """
