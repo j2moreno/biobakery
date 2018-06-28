@@ -30,7 +30,6 @@ rule all:
         'vis_inputs/kneaddata/merged/kneaddata_read_counts.tsv',
         expand('output/metaphlan_analysis/{sample}taxo_bugs.txt', sample = DEMO_SAMPLES),
         'vis_inputs/metaphlan2/merged/metaphlan2_taxonomic_profiles.tsv',
-        #expand('output/metaphlan_analysis/{sample}*.sam', sample = DEMO_SAMPLES),
         expand('output/humann2_analysis/{sample}/{sample}R1_R2__genefamilies.tsv', sample = DEMO_SAMPLES),
         'vis_inputs/humann2/counts/humann2_read_and_species_count_table.tsv'
 
